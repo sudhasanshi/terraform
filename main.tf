@@ -1,20 +1,14 @@
 provider "aws" {
-    region = "ap-south-1"
+    region = var.location
   
 }
 
-data "template_file" "web-userdata" {
-        template = "${file("sonarqube.sh")}"
-}
-
 resource "aws_instance" "ec2-mumbai" {
-  ami           = "ami-03f4878755434977f"
-  instance_type = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.instance.id]
-  user_data = "${data.template_file.web-userdata.rendered}"
-  key_name = "user"
+  ami           = var.instance_ami
+  instance_type = var.instance_type
+  key_name = var.key_name
   tags = {
-    Name = "my-sonar"
+    instance_name =var.instance_name
   }
 }
 
@@ -25,12 +19,6 @@ resource "aws_security_group" "instance" {
         ingress {
                 from_port = 80
                 to_port = 80
-                protocol = "tcp"
-                cidr_blocks = ["0.0.0.0/0"]
-        }
-        ingress {
-                from_port = 8082
-                to_port = 8082
                 protocol = "tcp"
                 cidr_blocks = ["0.0.0.0/0"]
         }
@@ -56,13 +44,11 @@ resource "aws_security_group" "instance" {
                 cidr_blocks = ["0.0.0.0/0"]
         }
 }
-variable "security_group_name" {
-  description = "The name of the security group"
-  type        = string
-  default     = "terraform-example-instance"
-}
+
 
 output "public_ip" {
   value       = aws_instance.ec2-mumbai.public_ip
   description = "The public IP of the Instance"
+  sensitive = true
 }
+
