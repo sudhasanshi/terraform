@@ -30,3 +30,9 @@ variable "security_group_name" {
 variable "location" {
   default = "ap-south-1"
 }
+
+variable "create-bucket" {
+    type = bool
+    default = true
+  
+}
