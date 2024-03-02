@@ -1,0 +1,29 @@
+provider "aws" {
+    region = var.location
+  
+}
+
+     
+resource "aws_s3_bucket" "my-s3" {
+    
+    count = length(var.bucket-names)
+    
+   bucket = var.bucket-names[count.index]
+ 
+   tags = {
+     Name = var.name
+   }
+   }
+
+resource "aws_instance" "ec2-instance" {
+
+    ami = "ami-0e670eb768a5fc3d4"
+    instance_type = "t2.micro"   
+    depends_on = [ aws_s3_bucket.my-s3 ]
+    count = 2
+    tags = {
+      Name = "ec2-instance-${count.index +1}"
+    }
+}
+
+
