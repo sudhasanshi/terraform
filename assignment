@@ -1,1 +1,68 @@
+To create a workspace with 3 environment, in each environment create ec2 instance and attach ebs with different storage 
+size and also attach elastic ip to instance using depends on function.
 
+provider "aws" {
+  region = "ap-south-1"
+}
+
+locals {
+
+  env="${terraform.workspace}"
+
+  sizes = {
+    "default"=1
+    "prod"=2
+    "dev"=3
+  }
+
+  tags-ec2 = {
+    "default"="def-ec2"
+    "prod"="prod-ec2"
+    "dev"="dev-ec2"
+  }
+  tags-ebs = {
+    "default"="def-ebs"
+    "prod"="prod-ebs"
+    "dev"="dev-ebs"
+  }
+
+   size="${lookup(local.sizes,local.env)}"
+   ec2-tag="${lookup(local.tags-ec2,local.env)}"
+   ebs-tag="${lookup(local.tags-ebs,local.env)}"
+ }
+
+resource "aws_instance" "my-ec2" {
+  ami           = "ami-0447a12f28fddb066" 
+  instance_type = "t2.micro" 
+  subnet_id ="subnet-0e6a769aa627169d5" 
+  tags = {
+    Name = "${local.ec2-tag}"
+  }   
+}
+resource "aws_ebs_volume" "my-ebs" {
+  availability_zone = "ap-south-1a" 
+  size              = "${local.size}" 
+  tags = {
+    Name = "${local.ebs-tag}"
+  }  
+}
+
+resource "aws_volume_attachment" "ec2-ebs-attach" {
+  device_name = "/dev/sdh"  
+  volume_id   = aws_ebs_volume.my-ebs.id
+  instance_id = aws_instance.my-ec2.id
+  depends_on = [ aws_ebs_volume.my-ebs, aws_instance.my-ec2]
+}
+
+resource "aws_eip" "staticipaddress" {
+  instance = aws_instance.my-ec2.id
+}
+
+resource "aws_eip_association" "static-ip-ec2" {
+  instance_id   = aws_instance.my-ec2.id
+  allocation_id = aws_eip.staticipaddress.id
+}
+
+output "static-ip-address" {
+  value = aws_instance.my-ec2.public_ip
+}
