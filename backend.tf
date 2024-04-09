@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket = "my-terraform-state-file-storage"
-    key    = "sudha/all"
+    key    = "path/terraform.tfstate"
     region = "ap-south-1"
   }
 }
